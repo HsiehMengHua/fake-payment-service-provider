@@ -173,6 +173,80 @@
             color: #9ca3af;
             font-size: 13px;
         }
+
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .message-overlay.show {
+            display: flex;
+        }
+
+        .message-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .message-icon.success {
+            color: #10b981;
+        }
+
+        .message-icon.error {
+            color: #ef4444;
+        }
+
+        .message-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .message-text {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -217,17 +291,106 @@
         </div>
     </div>
 
+    <div class="message-overlay" id="messageOverlay">
+        <div class="message-box">
+            <div class="message-icon" id="messageIcon"></div>
+            <div class="message-title" id="messageTitle"></div>
+            <div class="message-text" id="messageText"></div>
+        </div>
+    </div>
+
     <script>
-        function handleConfirm() {
-            // Submit form or make API call to confirm payment
-            const transactionId = '{{.TransactionID}}';
-            window.location.href = `/payment/confirm/${transactionId}`;
+        const transactionId = '{{.TransactionID}}';
+
+        function showMessage(type, title, text) {
+            const overlay = document.getElementById('messageOverlay');
+            const icon = document.getElementById('messageIcon');
+            const titleEl = document.getElementById('messageTitle');
+            const textEl = document.getElementById('messageText');
+
+            if (type === 'success') {
+                icon.innerHTML = '✓';
+                icon.className = 'message-icon success';
+            } else {
+                icon.innerHTML = '✗';
+                icon.className = 'message-icon error';
+            }
+
+            titleEl.textContent = title;
+            textEl.textContent = text;
+            overlay.classList.add('show');
         }
 
-        function handleCancel() {
-            // Submit form or make API call to cancel payment
-            const transactionId = '{{.TransactionID}}';
-            window.location.href = `/payment/cancel/${transactionId}`;
+        function setButtonLoading(button, isLoading, originalText) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner"></span>' + originalText;
+            } else {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        async function handleConfirm() {
+            const button = event.target;
+            const originalText = button.textContent;
+            setButtonLoading(button, true, 'Processing...');
+
+            try {
+                const response = await fetch('/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        callback_url: '{{.ConfirmCallback}}'
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('success', 'Payment Confirmed',
+                        `Transaction ${transactionId} has been successfully confirmed.`);
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error confirming payment:', error);
+                showMessage('error', 'Confirmation Failed',
+                    'An error occurred while confirming the payment. Please try again.');
+                setButtonLoading(button, false, originalText);
+            }
+        }
+
+        async function handleCancel() {
+            const button = event.target;
+            const originalText = button.textContent;
+            setButtonLoading(button, true, 'Processing...');
+
+            try {
+                const response = await fetch('/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        callback_url: '{{.CancelCallback}}'
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('success', 'Payment Cancelled',
+                        `Transaction ${transactionId} has been cancelled.`);
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error cancelling payment:', error);
+                showMessage('error', 'Cancellation Failed',
+                    'An error occurred while cancelling the payment. Please try again.');
+                setButtonLoading(button, false, originalText);
+            }
         }
     </script>
 </body>

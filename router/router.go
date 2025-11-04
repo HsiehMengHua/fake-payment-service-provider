@@ -12,7 +12,9 @@ func Setup() *gin.Engine {
 	r.StaticFile("/version", "./version.txt")
 
 	ctrl := controllers.NewPaymentController()
-	r.GET("/payment/:transaction_id/:amount/:merchant", ctrl.PaymentPage)
+	r.GET("/payment/:transaction_id", ctrl.PaymentPage)
+	r.POST("/confirm", ctrl.ConfirmPayment)
+	r.POST("/cancel", ctrl.CancelPayment)
 
 	return r
 }
