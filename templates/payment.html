@@ -337,7 +337,7 @@
             setButtonLoading(button, true, 'Processing...');
 
             try {
-                const response = await fetch('/confirm', {
+                const response = await fetch('/transaction/confirm', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -368,7 +368,7 @@
             setButtonLoading(button, true, 'Processing...');
 
             try {
-                const response = await fetch('/cancel', {
+                const response = await fetch('/transaction/cancel', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
