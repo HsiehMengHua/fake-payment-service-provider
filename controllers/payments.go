@@ -13,7 +13,8 @@ import (
 )
 
 type PaymentController interface {
-	PaymentPage(c *gin.Context)
+	PayInPage(c *gin.Context)
+	PayOutPage(c *gin.Context)
 	ConfirmPayment(c *gin.Context)
 	CancelPayment(c *gin.Context)
 }
@@ -36,7 +37,7 @@ func NewPaymentController() PaymentController {
 	return &paymentController{}
 }
 
-func (ctrl *paymentController) PaymentPage(c *gin.Context) {
+func (ctrl *paymentController) PayInPage(c *gin.Context) {
 	transactionID := c.Param("transaction_id")
 	amount := c.Query("amount")
 	merchant := c.Query("merchant")
@@ -47,6 +48,24 @@ func (ctrl *paymentController) PaymentPage(c *gin.Context) {
 		"TransactionID":   transactionID,
 		"Amount":          amount,
 		"Merchant":        merchant,
+		"ConfirmCallback": confirmCallback,
+		"CancelCallback":  cancelCallback,
+	})
+}
+
+func (ctrl *paymentController) PayOutPage(c *gin.Context) {
+	transactionID := c.Param("transaction_id")
+	amount := c.Query("amount")
+	bankCode := c.Query("bank_code")
+	accountNumber := c.Query("account_number")
+	confirmCallback := c.Query("confirm_callback")
+	cancelCallback := c.Query("cancel_callback")
+
+	c.HTML(http.StatusOK, "payout.html", gin.H{
+		"TransactionID":   transactionID,
+		"Amount":          amount,
+		"BankCode":        bankCode,
+		"AccountNumber":   accountNumber,
 		"ConfirmCallback": confirmCallback,
 		"CancelCallback":  cancelCallback,
 	})

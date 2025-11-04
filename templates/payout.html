@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payout Simulation - Fake Payment Provider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+            margin: 25px 0;
+        }
+
+        .info-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .info-box p {
+            color: #4b5563;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .info-box .question {
+            color: #1f2937;
+            font-weight: 600;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        .transaction-details {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .transaction-details h2 {
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .detail-value {
+            color: #1f2937;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: none;
+        }
+
+        .btn-confirm {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .message-overlay.show {
+            display: flex;
+        }
+
+        .message-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .message-icon.success {
+            color: #10b981;
+        }
+
+        .message-icon.error {
+            color: #ef4444;
+        }
+
+        .message-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .message-text {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="badge">Development Simulation</span>
+        </div>
+
+        <div class="info-box">
+            <p>
+                This page simulates a scenario where a payout request has been initiated
+                and is awaiting authorization from the payment service provider.
+            </p>
+            <p class="question">
+                What should the payment provider do next with this payout request?
+            </p>
+        </div>
+
+        <div class="transaction-details">
+            <h2>Transaction Details</h2>
+            <div class="detail-row">
+                <span class="detail-label">Transaction ID:</span>
+                <span class="detail-value">{{.TransactionID}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Bank Code:</span>
+                <span class="detail-value">{{.BankCode}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Bank Account:</span>
+                <span class="detail-value">{{.AccountNumber}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span class="detail-value">{{.Amount}}</span>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-confirm" onclick="handleConfirm()">Confirm Payout</button>
+            <button class="btn-cancel" onclick="handleCancel()">Cancel Payout</button>
+        </div>
+
+        <div class="footer">
+            <p>This is a fake payment provider for development and testing purposes only.</p>
+        </div>
+    </div>
+
+    <div class="message-overlay" id="messageOverlay">
+        <div class="message-box">
+            <div class="message-icon" id="messageIcon"></div>
+            <div class="message-title" id="messageTitle"></div>
+            <div class="message-text" id="messageText"></div>
+        </div>
+    </div>
+
+    <script>
+        const transactionId = '{{.TransactionID}}';
+
+        function showMessage(type, title, text) {
+            const overlay = document.getElementById('messageOverlay');
+            const icon = document.getElementById('messageIcon');
+            const titleEl = document.getElementById('messageTitle');
+            const textEl = document.getElementById('messageText');
+
+            if (type === 'success') {
+                icon.innerHTML = '✓';
+                icon.className = 'message-icon success';
+            } else {
+                icon.innerHTML = '✗';
+                icon.className = 'message-icon error';
+            }
+
+            titleEl.textContent = title;
+            textEl.textContent = text;
+            overlay.classList.add('show');
+        }
+
+        function setButtonLoading(button, isLoading, originalText) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner"></span>' + originalText;
+            } else {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        async function handleConfirm() {
+            const button = event.target;
+            const originalText = button.textContent;
+            setButtonLoading(button, true, 'Processing...');
+
+            try {
+                const response = await fetch('/transaction/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        callback_url: '{{.ConfirmCallback}}'
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('success', 'Payout Confirmed',
+                        `Transaction ${transactionId} has been successfully confirmed.`);
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error confirming payout:', error);
+                showMessage('error', 'Confirmation Failed',
+                    'An error occurred while confirming the payout. Please try again.');
+                setButtonLoading(button, false, originalText);
+            }
+        }
+
+        async function handleCancel() {
+            const button = event.target;
+            const originalText = button.textContent;
+            setButtonLoading(button, true, 'Processing...');
+
+            try {
+                const response = await fetch('/transaction/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        callback_url: '{{.CancelCallback}}'
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('success', 'Payout Cancelled',
+                        `Transaction ${transactionId} has been cancelled.`);
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error cancelling payout:', error);
+                showMessage('error', 'Cancellation Failed',
+                    'An error occurred while cancelling the payout. Please try again.');
+                setButtonLoading(button, false, originalText);
+            }
+        }
+    </script>
+</body>
+</html>
