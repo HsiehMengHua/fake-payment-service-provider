@@ -44,7 +44,7 @@ func (ctrl *paymentController) PayInPage(c *gin.Context) {
 	confirmCallback := c.Query("confirm_callback")
 	cancelCallback := c.Query("cancel_callback")
 
-	c.HTML(http.StatusOK, "payment.html", gin.H{
+	c.HTML(http.StatusOK, "payin.html", gin.H{
 		"TransactionID":   transactionID,
 		"Amount":          amount,
 		"Merchant":        merchant,
