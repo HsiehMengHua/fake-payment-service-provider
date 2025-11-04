@@ -13,8 +13,8 @@ func Setup() *gin.Engine {
 
 	ctrl := controllers.NewPaymentController()
 	r.GET("/payin/:transaction_id", ctrl.PaymentPage)
-	r.POST("transaction/confirm", ctrl.ConfirmPayment)
-	r.POST("transaction/cancel", ctrl.CancelPayment)
+	r.POST("/transaction/confirm", ctrl.ConfirmPayment)
+	r.POST("/transaction/cancel", ctrl.CancelPayment)
 
 	return r
 }
